@@ -1,6 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
-import requests
+
 
 AI_SERVICE_URL = "http://ai-service:5000/irrigate"
 
