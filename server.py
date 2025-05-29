@@ -17,15 +17,15 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             try:
                 data = json.loads(post_data)
-                # 检查必需字段
                 required_fields = ["humidity", "temperature", "light_intensity", "soil_type", "timestamp", "device_id"]
                 for field in required_fields:
                     if field not in data:
                         raise ValueError(f"Missing field: {field}")
 
                 # 转发给AI服务
-                ai_response = requests.post(AI_SERVICE_URL, json=data, timeout=5)
-                ai_result = ai_response.json()
+                # ai_response = requests.post(AI_SERVICE_URL, json=data, timeout=5)
+                # ai_result = ai_response.json()
+                ai_result = {"should_irrigate": True, "amount": 100}  # 测试用假数据
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
