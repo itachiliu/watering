@@ -8,6 +8,22 @@ latest_data = {}
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path == "/hello.txt":
+            try:
+                with open("hello.txt", "r", encoding="utf-8") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+            except FileNotFoundError:
+                self.send_response(404)
+                self.send_header('Content-type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b"hello.txt 文件未找到")
+            return
+
+        # ...existing code for HTML page...
         self.send_response(200)
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
