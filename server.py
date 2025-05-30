@@ -20,7 +20,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(404)
                 self.send_header('Content-type', 'text/plain; charset=utf-8')
                 self.end_headers()
-                self.wfile.write(b"hello.txt 文件未找到")
+                self.wfile.write(b"hello.txt not found")
             return
 
         # ...existing code for HTML page...
