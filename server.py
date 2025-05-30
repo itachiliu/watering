@@ -1,8 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 
-AI_SERVICE_URL = "http://ai-service:5000/irrigate"
-
 # 用于保存最近一次上传的信息
 latest_data = {}
 
@@ -23,7 +21,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b"hello.txt not found")
             return
 
-        # ...existing code for HTML page...
         self.send_response(200)
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
@@ -39,23 +36,15 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         <div class="container mt-5">
             <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
         """
-        if latest_data:
-            html += """
+        if "humidity" in latest_data:
+            html += f"""
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
-                    最近上传的信息
+                    最近上传的湿度
                 </div>
                 <div class="card-body">
                     <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr><th>字段</th><th>值</th></tr>
-                        </thead>
-                        <tbody>
-            """
-            for k, v in latest_data.items():
-                html += f"<tr><td>{k}</td><td>{v}</td></tr>"
-            html += """
-                        </tbody>
+                        <tr><th>湿度</th><td>{latest_data['humidity']}</td></tr>
                     </table>
                 </div>
             </div>
@@ -71,29 +60,21 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         global latest_data
-        if self.path == "/humidity":
+        if self.path == "/":
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             try:
                 data = json.loads(post_data)
-                required_fields = ["humidity", "temperature", "light_intensity", "soil_type", "timestamp", "device_id"]
-                for field in required_fields:
-                    if field not in data:
-                        raise ValueError(f"Missing field: {field}")
-
-                latest_data = data  # 保存最新上传数据
-
-                # 转发给AI服务
-                # ai_response = requests.post(AI_SERVICE_URL, json=data, timeout=5)
-                # ai_result = ai_response.json()
-                ai_result = {"should_irrigate": True, "amount": 100}  # 测试用假数据
+                if "humidity" not in data:
+                    raise ValueError("Missing field: humidity")
+                latest_data = {"humidity": data["humidity"]}
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 response = {
                     "status": "success",
-                    "ai_decision": ai_result
+                    "received_humidity": data["humidity"]
                 }
                 self.wfile.write(json.dumps(response).encode())
             except Exception as e:
