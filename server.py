@@ -60,21 +60,22 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         global latest_data
-        if self.path == "/":
+        if self.path == "/humidity":
             content_length = int(self.headers.get('Content-Length', 0))
-            post_data = self.rfile.read(content_length)
+            post_data = self.rfile.read(content_length).decode('utf-8')
             try:
-                data = json.loads(post_data)
-                if "humidity" not in data:
+                params = parse_qs(post_data)
+                if "humidity" not in params or not params["humidity"]:
                     raise ValueError("Missing field: humidity")
-                latest_data = {"humidity": data["humidity"]}
+                humidity = params["humidity"][0]
+                latest_data = {"humidity": humidity}
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 response = {
                     "status": "success",
-                    "received_humidity": data["humidity"]
+                    "received_humidity": humidity
                 }
                 self.wfile.write(json.dumps(response).encode())
             except Exception as e:
