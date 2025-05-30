@@ -1,7 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 
-
 AI_SERVICE_URL = "http://ai-service:5000/irrigate"
 
 # 用于保存最近一次上传的信息
@@ -10,20 +9,49 @@ latest_data = {}
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')  # 指定utf-8编码
+        self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
-        html = "<html><body><h1>欢迎来到张康硕的基于AI的自动灌溉系统!</h1>"
+        html = """
+        <!DOCTYPE html>
+        <html lang="zh-cn">
+        <head>
+            <meta charset="utf-8">
+            <title>AI自动灌溉系统数据展示</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        </head>
+        <body class="bg-light">
+        <div class="container mt-5">
+            <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
+        """
         if latest_data:
-            html += "<h2>最近上传的信息：</h2>"
-            html += "<table border='1' style='border-collapse:collapse;'>"
-            html += "<tr><th>字段</th><th>值</th></tr>"
+            html += """
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    最近上传的信息
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr><th>字段</th><th>值</th></tr>
+                        </thead>
+                        <tbody>
+            """
             for k, v in latest_data.items():
                 html += f"<tr><td>{k}</td><td>{v}</td></tr>"
-            html += "</table>"
+            html += """
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            """
         else:
-            html += "<p>暂无上传数据。</p>"
-        html += "</body></html>"
-        self.wfile.write(html.encode('utf-8'))  # 用utf-8编码
+            html += '<div class="alert alert-warning mt-4">暂无上传数据。</div>'
+        html += """
+        </div>
+        </body>
+        </html>
+        """
+        self.wfile.write(html.encode('utf-8'))
 
     def do_POST(self):
         global latest_data
