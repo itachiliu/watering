@@ -3,10 +3,18 @@ import json
 import logging
 from urllib.parse import parse_qs
 
-from datetime import datetime
+# 日志配置
+logging.basicConfig(
+    filename='server.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
 
+
+from datetime import datetime
 # 用于保存所有上传的信息
 latest_data_list = []
+
 
 def get_season(month):
     # 简单判断季节
@@ -18,13 +26,6 @@ def get_season(month):
         return "秋季"
     else:
         return "冬季"
-# 日志配置
-logging.basicConfig(
-    filename='server.log',
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s'
-)
-
 # 用于保存最近一次上传的信息
 latest_data = {}
 
@@ -86,8 +87,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(html.encode('utf-8'))
         logging.info("返回主页HTML页面")
 
+
     def do_POST(self):
-        global latest_data_list
+        global latest_data
         logging.info(f"收到POST请求: {self.path}")
         if self.path == "/humidity":
             content_length = int(self.headers.get('Content-Length', 0))
@@ -109,14 +111,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 latest_data_list.append(record)
                 logging.info(f"接收到湿度数据: {humidity}, 时间: {time_str}, 季节: {season}")
 
+
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 response = {
                     "status": "success",
-                    "received_humidity": humidity,
-                    "time": time_str,
-                    "season": season
+                    "received_humidity": humidity
                 }
                 self.wfile.write(json.dumps(response).encode())
             except Exception as e:
@@ -130,7 +131,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             logging.warning(f"未知POST路径: {self.path}")
             self.send_response(404)
             self.end_headers()
-
 
 def run(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler, port=8080):
     server_address = ('', port)
