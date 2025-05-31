@@ -10,22 +10,6 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s'
 )
 
-
-from datetime import datetime
-# 用于保存所有上传的信息
-latest_data_list = []
-
-
-def get_season(month):
-    # 简单判断季节
-    if month in [3, 4, 5]:
-        return "春季"
-    elif month in [6, 7, 8]:
-        return "夏季"
-    elif month in [9, 10, 11]:
-        return "秋季"
-    else:
-        return "冬季"
 # 用于保存最近一次上传的信息
 latest_data = {}
 
@@ -33,7 +17,20 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logging.info(f"收到GET请求: {self.path}")
         if self.path == "/hello.txt":
-            # ...existing code...
+            try:
+                with open("hello.txt", "r", encoding="utf-8") as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(content.encode('utf-8'))
+                logging.info("成功返回hello.txt内容")
+            except FileNotFoundError:
+                self.send_response(404)
+                self.send_header('Content-type', 'text/plain; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b"hello.txt not found")
+                logging.warning("hello.txt未找到")
             return
 
         self.send_response(200)
@@ -51,28 +48,15 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         <div class="container mt-5">
             <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
         """
-
-        if latest_data_list:
-            html += """
+        if "humidity" in latest_data:
+            html += f"""
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
-                    所有上传的湿度记录
+                    最近上传的湿度
                 </div>
                 <div class="card-body">
                     <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>湿度</th>
-                                <th>上传时间</th>
-                                <th>季节</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            """
-            for item in reversed(latest_data_list):
-                html += f"<tr><td>{item['humidity']}</td><td>{item['time']}</td><td>{item['season']}</td></tr>"
-            html += """
-                        </tbody>
+                        <tr><th>湿度</th><td>{latest_data['humidity']}</td></tr>
                     </table>
                 </div>
             </div>
@@ -87,7 +71,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(html.encode('utf-8'))
         logging.info("返回主页HTML页面")
 
-
     def do_POST(self):
         global latest_data
         logging.info(f"收到POST请求: {self.path}")
@@ -100,17 +83,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 if "humidity" not in params or not params["humidity"]:
                     raise ValueError("Missing field: humidity")
                 humidity = params["humidity"][0]
-                now = datetime.now()
-                time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-                season = get_season(now.month)
-                record = {
-                    "humidity": humidity,
-                    "time": time_str,
-                    "season": season
-                }
-                latest_data_list.append(record)
-                logging.info(f"接收到湿度数据: {humidity}, 时间: {time_str}, 季节: {season}")
-
+                latest_data = {"humidity": humidity}
+                logging.info(f"接收到湿度数据: {humidity}")
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
