@@ -1,11 +1,21 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+import logging
+from urllib.parse import parse_qs
+
+# 日志配置
+logging.basicConfig(
+    filename='server.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
 
 # 用于保存最近一次上传的信息
 latest_data = {}
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        logging.info(f"收到GET请求: {self.path}")
         if self.path == "/hello.txt":
             try:
                 with open("hello.txt", "r", encoding="utf-8") as f:
@@ -14,11 +24,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/plain; charset=utf-8')
                 self.end_headers()
                 self.wfile.write(content.encode('utf-8'))
+                logging.info("成功返回hello.txt内容")
             except FileNotFoundError:
                 self.send_response(404)
                 self.send_header('Content-type', 'text/plain; charset=utf-8')
                 self.end_headers()
                 self.wfile.write(b"hello.txt not found")
+                logging.warning("hello.txt未找到")
             return
 
         self.send_response(200)
@@ -57,18 +69,22 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         </html>
         """
         self.wfile.write(html.encode('utf-8'))
+        logging.info("返回主页HTML页面")
 
     def do_POST(self):
         global latest_data
+        logging.info(f"收到POST请求: {self.path}")
         if self.path == "/humidity":
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length).decode('utf-8')
+            logging.info(f"POST数据: {post_data}")
             try:
                 params = parse_qs(post_data)
                 if "humidity" not in params or not params["humidity"]:
                     raise ValueError("Missing field: humidity")
                 humidity = params["humidity"][0]
                 latest_data = {"humidity": humidity}
+                logging.info(f"接收到湿度数据: {humidity}")
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -79,18 +95,21 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 }
                 self.wfile.write(json.dumps(response).encode())
             except Exception as e:
+                logging.error(f"处理POST请求出错: {e}")
                 self.send_response(400)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 response = {"status": "error", "message": str(e)}
                 self.wfile.write(json.dumps(response).encode())
         else:
+            logging.warning(f"未知POST路径: {self.path}")
             self.send_response(404)
             self.end_headers()
 
 def run(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler, port=8080):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
+    logging.info(f"启动HTTP服务器，端口: {port}")
     print(f"Starting http server on port {port}...")
     httpd.serve_forever()
 
