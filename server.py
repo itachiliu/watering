@@ -13,6 +13,17 @@ logging.basicConfig(
 # 用于保存最近一次上传的信息
 latest_data = {}
 
+import datetime
+
+def get_season(month):
+    if month in [3, 4, 5]:
+        return "春季"
+    elif month in [6, 7, 8]:
+        return "夏季"
+    elif month in [9, 10, 11]:
+        return "秋季"
+    else:
+        return "冬季"
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logging.info(f"收到GET请求: {self.path}")
@@ -49,6 +60,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
         """
         if "humidity" in latest_data:
+            now = datetime.datetime.now()
+            time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+            season = get_season(now.month)
             html += f"""
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
@@ -57,6 +71,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 <div class="card-body">
                     <table class="table table-bordered table-striped">
                         <tr><th>湿度</th><td>{latest_data['humidity']}</td></tr>
+                        <tr><th>上传时间</th><td>{time_str}</td></tr>
+                        <tr><th>季节</th><td>{season}</td></tr>
                     </table>
                 </div>
             </div>
@@ -70,7 +86,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         """
         self.wfile.write(html.encode('utf-8'))
         logging.info("返回主页HTML页面")
-
     def do_POST(self):
         global latest_data
         logging.info(f"收到POST请求: {self.path}")
