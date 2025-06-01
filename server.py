@@ -68,7 +68,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
             <div class="mb-4"><strong>地理位置：</strong>{LOCATION}</div>
         """
-         tz = datetime.timezone(datetime.timedelta(hours=8))
+        tz = pytz.timezone("Asia/Shanghai")
         now = datetime.datetime.now(tz)
         time_str = now.strftime("%Y-%m-%d %H:%M:%S")
         season = get_season(now.month)
