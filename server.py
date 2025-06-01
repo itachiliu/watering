@@ -68,13 +68,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
             <div class="mb-4"><strong>地理位置：</strong>{LOCATION}</div>
         """
-        tz = pytz.timezone("Asia/Shanghai")
+         tz = datetime.timezone(datetime.timedelta(hours=8))
         now = datetime.datetime.now(tz)
         time_str = now.strftime("%Y-%m-%d %H:%M:%S")
         season = get_season(now.month)
         if "humidity" in latest_data:
             for plant in PLANTS:
-                analysis = analyze_watering(plant, latest_data['humidity'], time_str, season)
+                analysis = plant_analysis.get(plant, "暂无分析结果")
                 html += f"""
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-info text-white">
@@ -110,7 +110,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(html.encode('utf-8'))
         logging.info("返回主页HTML页面")
     def do_POST(self):
-        global latest_data
+        global latest_data, plant_analysis
         logging.info(f"收到POST请求: {self.path}")
         if self.path == "/humidity":
             content_length = int(self.headers.get('Content-Length', 0))
@@ -118,14 +118,18 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             logging.info(f"POST数据: {post_data}")
             try:
                 params = parse_qs(post_data)
-                logging.info(f"post_data: {post_data}")
-                logging.info(f"解析后的参数: {params}")
                 if "humidity" not in params or not params["humidity"]:
                     raise ValueError("Missing field: humidity")
                 humidity = params["humidity"][0]
                 latest_data = {"humidity": humidity}
-                logging.info(f"接收到湿度数据: {humidity}")
-
+                # 生成分析结果并保存
+                tz = datetime.timezone(datetime.timedelta(hours=8))  # 东八区
+                now = datetime.datetime.now(tz)
+                time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+                season = get_season(now.month)
+                for plant in PLANTS:
+                    plant_analysis[plant] = analyze_watering(plant, humidity, time_str, season)
+                logging.info("已完成所有植物的AI分析")
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
