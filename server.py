@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import logging
 from urllib.parse import parse_qs
+from deepseek import analyze_watering
 
 # 日志配置
 logging.basicConfig(
