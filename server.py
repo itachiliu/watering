@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import logging
+from time import sleep
 from urllib.parse import parse_qs
 from deepseek import analyze_watering
 
@@ -130,6 +131,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 season = get_season(now.month)
                 for plant in PLANTS:
                     plant_analysis[plant] = analyze_watering(plant, humidity, time_str, season)
+                    sleep(3)  # 模拟处理时间
                 logging.info("已完成所有植物的AI分析")
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
