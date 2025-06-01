@@ -115,6 +115,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             logging.info(f"POST数据: {post_data}")
             try:
                 params = parse_qs(post_data)
+                logging.info(f"post_data: {post_data}")
+                logging.info(f"解析后的参数: {params}")
                 if "humidity" not in params or not params["humidity"]:
                     raise ValueError("Missing field: humidity")
                 humidity = params["humidity"][0]
