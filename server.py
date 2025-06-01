@@ -24,6 +24,13 @@ def get_season(month):
         return "秋季"
     else:
         return "冬季"
+    
+# 增加地理位置和植物种类
+LOCATION = "南京"
+PLANTS = ["薄荷", "花生", "大豆", "生菜", "小葱"]
+
+# 每种植物的最新湿度数据
+plant_data = {plant: {} for plant in PLANTS}
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logging.info(f"收到GET请求: {self.path}")
