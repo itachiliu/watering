@@ -32,6 +32,7 @@ PLANTS = ["薄荷", "花生", "大豆", "生菜", "小葱"]
 
 # 每种植物的最新湿度数据
 plant_data = {plant: {} for plant in PLANTS}
+plant_analysis = {plant: "" for plant in PLANTS}  # 保存每个植物的分析结果
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         logging.info(f"收到GET请求: {self.path}")
