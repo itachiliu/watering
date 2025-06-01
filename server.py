@@ -73,6 +73,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         season = get_season(now.month)
         if "humidity" in latest_data:
             for plant in PLANTS:
+                analysis = analyze_watering(plant, latest_data['humidity'], time_str, season)
                 html += f"""
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-info text-white">
@@ -84,6 +85,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                             <tr><th>上传时间</th><td>{time_str}</td></tr>
                             <tr><th>季节</th><td>{season}</td></tr>
                         </table>
+                        <div class="alert alert-secondary mt-3"><strong>AI分析：</strong>{analysis}</div>
                     </div>
                 </div>
                 """
