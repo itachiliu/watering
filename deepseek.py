@@ -1,6 +1,6 @@
 import requests
 
-DEEPSEEK_API_URL = "https://api.deepseek.com"
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 DEEPSEEK_API_KEY = "sk-aff234ca657a42e2a011f94bd9c5ad25"  # 请替换为你的真实API KEY
 
 def analyze_watering(plant, humidity, time_str, season):
