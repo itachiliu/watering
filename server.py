@@ -14,7 +14,7 @@ logging.basicConfig(
 latest_data = {}
 
 import datetime
-
+import pytz  # 需要安装 pytz 库
 def get_season(month):
     if month in [3, 4, 5]:
         return "春季"
@@ -47,7 +47,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
-        html = """
+        html = f"""
         <!DOCTYPE html>
         <html lang="zh-cn">
         <head>
@@ -58,27 +58,40 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         <body class="bg-light">
         <div class="container mt-5">
             <h1 class="mb-4 text-primary">欢迎来到张康硕的基于AI的自动灌溉系统!</h1>
+            <div class="mb-4"><strong>地理位置：</strong>{LOCATION}</div>
         """
+        tz = pytz.timezone("Asia/Shanghai")
+        now = datetime.datetime.now(tz)
+        time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        season = get_season(now.month)
         if "humidity" in latest_data:
-            now = datetime.datetime.now()
-            time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-            season = get_season(now.month)
-            html += f"""
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    最近上传的湿度
+            for plant in PLANTS:
+                html += f"""
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        {plant} 的最新湿度数据
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered table-striped">
+                            <tr><th>湿度</th><td>{latest_data['humidity']}</td></tr>
+                            <tr><th>上传时间</th><td>{time_str}</td></tr>
+                            <tr><th>季节</th><td>{season}</td></tr>
+                        </table>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <tr><th>湿度</th><td>{latest_data['humidity']}</td></tr>
-                        <tr><th>上传时间</th><td>{time_str}</td></tr>
-                        <tr><th>季节</th><td>{season}</td></tr>
-                    </table>
-                </div>
-            </div>
-            """
+                """
         else:
-            html += '<div class="alert alert-warning mt-4">暂无上传数据。</div>'
+            for plant in PLANTS:
+                html += f"""
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-info text-white">
+                        {plant} 的最新湿度数据
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">暂无上传数据。</div>
+                    </div>
+                </div>
+                """
         html += """
         </div>
         </body>
